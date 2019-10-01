@@ -4,6 +4,7 @@ import chaiAsPromised from 'chai-as-promised';
 
 import jsonapiClient from '../src/index';
 import getList from './fixtures/get-list';
+import getListNoMeta from './fixtures/get-list-no-meta';
 import getManyReference from './fixtures/get-many-reference';
 import getOne from './fixtures/get-one';
 import create from './fixtures/create';
@@ -33,7 +34,9 @@ describe('GET_LIST', () => {
       pagination: { page: 1, perPage: 25 },
       sort: { field: 'name', order: 'ASC' },
     })
-      .then((data) => { result = data; });
+      .then((data) => {
+        result = data;
+      });
   });
 
   it('returns an object', () => {
@@ -68,7 +71,9 @@ describe('GET_MANY_REFERENCE', () => {
       target: 'company_id',
       id: 1,
     })
-      .then((data) => { result = data; });
+      .then((data) => {
+        result = data;
+      });
   });
 
   it('returns an object', () => {
@@ -99,7 +104,9 @@ describe('GET_ONE', () => {
       .reply(200, getOne);
 
     return client('GET_ONE', 'users', { id: 1 })
-      .then((data) => { result = data; });
+      .then((data) => {
+        result = data;
+      });
   });
 
   it('returns an object', () => {
@@ -122,7 +129,9 @@ describe('GET_ONE, with a resource linkage', () => {
       .reply(200, getOneLinkage);
 
     return client('GET_ONE', 'users', { id: 1 })
-      .then((data) => { result = data; });
+      .then((data) => {
+        result = data;
+      });
   });
 
   it('returns an object', () => {
@@ -140,8 +149,8 @@ describe('GET_ONE, with a resource linkage', () => {
   it('has a relationship field', () => {
     expect(result.data).to.have.property('relationships').that.is.deep.equal({
       address: {
-        id: '9'
-      }
+        id: '9',
+      },
     });
   });
 });
@@ -153,7 +162,9 @@ describe('GET_ONE, with included relationship data', () => {
       .reply(200, getOneIncluded);
 
     return client('GET_ONE', 'users', { id: 1 })
-      .then(data => { result = data; });
+      .then(data => {
+        result = data;
+      });
   });
 
   it('returns an object', () => {
@@ -175,8 +186,8 @@ describe('GET_ONE, with included relationship data', () => {
         street: 'Pinchelone Street',
         number: 2475,
         city: 'Norfolk',
-        state: 'VA'
-      }
+        state: 'VA',
+      },
     });
   });
 });
@@ -188,7 +199,9 @@ describe('CREATE', () => {
       .reply(201, create);
 
     return client('CREATE', 'users', { data: { name: 'Sarah' } })
-      .then((data) => { result = data; });
+      .then((data) => {
+        result = data;
+      });
   });
 
   it('returns an object', () => {
@@ -211,7 +224,9 @@ describe('UPDATE', () => {
       .reply(200, update);
 
     return client('UPDATE', 'users', { id: 1, data: { name: 'Tim' } })
-      .then((data) => { result = data; });
+      .then((data) => {
+        result = data;
+      });
   });
 
   it('returns an object', () => {
@@ -234,7 +249,9 @@ describe('DELETE', () => {
       .reply(204, null);
 
     return client('DELETE', 'users', { id: 1 })
-      .then((data) => { result = data; });
+      .then((data) => {
+        result = data;
+      });
   });
 
   it('returns an object', () => {
@@ -271,8 +288,10 @@ describe('GET_MANY', () => {
       .get(/users.*filter=.*/)
       .reply(200, getMany);
 
-    return client('GET_MANY', 'users', { ids: [1] } )
-      .then((data) => { result = data; });
+    return client('GET_MANY', 'users', { ids: [ 1 ] })
+      .then((data) => {
+        result = data;
+      });
   });
 
   it('returns an object', () => {
@@ -302,8 +321,10 @@ describe('GET_MANY with included relationship data', () => {
       .get(/users.*filter=.*/)
       .reply(200, getManyIncluded);
 
-    return client('GET_MANY', 'users', { ids: [1] } )
-      .then((data) => { result = data; });
+    return client('GET_MANY', 'users', { ids: [ 1 ] })
+      .then((data) => {
+        result = data;
+      });
   });
 
   it('returns an object', () => {
@@ -328,13 +349,47 @@ describe('GET_MANY with included relationship data', () => {
           street: 'Pinchelone Street',
           number: 2475,
           city: 'Norfolk',
-          state: 'VA'
-        }
-      }
+          state: 'VA',
+        },
+      },
     });
   });
 
   it('contains a total property', () => {
     expect(result).to.have.property('total').that.is.equal(1);
+  });
+});
+
+// This test should work exactly the same as the normal GET_LIST test, but the returned data has no
+// meta  field, and thus no count variable. We set the count variable to null in the client
+describe('GET_LIST with {total: null}', () => {
+  it('contains a total property', () => {
+    nock('http://api.example.com')
+      .get(/users.*sort=name.*/)
+      .reply(200, getListNoMeta);
+
+    const noMetaClient = jsonapiClient('http://api.example.com', {
+      total: null,
+    });
+
+    return expect(
+      noMetaClient('GET_LIST', 'users', {
+        pagination: { page: 1, perPage: 25 },
+        sort: { field: 'name', order: 'ASC' },
+      }),
+    ).to.eventually.have.property('total').that.is.equal(5);
+  });
+});
+
+describe('GET_LIST with incorrect "total"', () => {
+  it('throws an Error in this situation', () => {
+    nock('http://api.example.com')
+      .get(/users.*sort=name.*/)
+      .reply(200, getListNoMeta);
+
+    return expect(client('GET_LIST', 'users', {
+      pagination: { page: 1, perPage: 25 },
+      sort: { field: 'name', order: 'ASC' },
+    })).to.be.rejectedWith(Error);
   });
 });
