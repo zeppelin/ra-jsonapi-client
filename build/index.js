@@ -32,10 +32,12 @@ var _initializer2 = _interopRequireDefault(_initializer);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 /** This proxy ensures that every relationship is serialized to an object of the form {id: x}, even
  * if that relationship doesn't have included data
  */
-var specialOpts = ['transform', 'keyForAttribute', 'id', 'typeAsAttribute'];
+var specialOpts = ['transform', 'keyForAttribute', 'id', 'typeAsAttribute', 'links'];
 var relationshipProxyHandler = {
   has: function has(target, key) {
     // Pretend to have all keys except certain ones with special meanings
@@ -93,8 +95,14 @@ exports.default = function (apiUrl) {
 
     function getSerializerOpts() {
       var resourceSpecific = settings.serializerOpts[resource] || {};
+
+      // By default, assume the user wants to serialize all keys except links, in case that's
+      // a leftover from a deserialized resource
+      var attributes = new Set(Object.keys(params.data));
+      attributes.delete('links');
+
       return Object.assign({
-        attributes: Object.keys(params.data)
+        attributes: [].concat(_toConsumableArray(attributes))
       }, resourceSpecific);
     }
 
