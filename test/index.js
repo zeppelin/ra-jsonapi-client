@@ -427,6 +427,36 @@ describe('GET_LIST with {total: null}', () => {
   });
 });
 
+describe('CREATE with default serializerOpts and deserializerOpts', () => {
+  after(() => {
+    nock.cleanAll();
+  });
+  it('loads an camelCase relationship, and deserializes it to camelCase', () => {
+    nock('http://api.example.com')
+      .post('/data')
+      .reply(200, addIds);
+
+    const camelcaseClient = jsonapiClient('http://api.example.com');
+
+    return camelcaseClient('CREATE', 'data', {
+      data: {
+        value: 23,
+        dataType: {
+          id: 2,
+        },
+      },
+    }).then((response) => {
+      expect(response.data).to.deep.equal({
+        id: 1,
+        value: 23,
+        dataType: {
+          id: 2,
+        },
+      });
+    });
+  });
+});
+
 describe('CREATE with custom serializerOpts and deserializerOpts', () => {
   after(() => {
     nock.cleanAll();

@@ -6,6 +6,10 @@ export default {
   },
   updateMethod: 'PATCH',
   arrayFormat: 'brackets',
-  serializerOpts: {},
-  deserializerOpts: {},
+  serializerOpts: {
+    keyForAttribute: 'camelCase',
+  },
+  deserializerOpts: {
+    keyForAttribute: 'camelCase',
+  },
 };

@@ -67,7 +67,10 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
   };
 
   function getSerializerOpts() {
-    const resourceSpecific = settings.serializerOpts[resource] || {};
+    const resourceSpecific = Object.assign(
+      defaultSettings.serializerOpts,
+      settings.serializerOpts[resource],
+    );
 
     // By default, assume the user wants to serialize all keys except links, in case that's
     // a leftover from a deserialized resource
@@ -165,7 +168,12 @@ export default (apiUrl, userSettings = {}) => (type, resource, params) => {
 
   return axios({ url, ...options })
     .then((response) => {
-      const opts = new Proxy(settings.deserializerOpts[resource] || {}, relationshipProxyHandler);
+      const deserializerOpts = Object.assign(
+        defaultSettings.deserializerOpts,
+        settings.deserializerOpts[resource],
+      );
+
+      const opts = new Proxy(deserializerOpts, relationshipProxyHandler);
 
       switch (type) {
         case GET_MANY:
